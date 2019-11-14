@@ -2,6 +2,8 @@ package utils;
 
 import java.time.LocalDate;
 
+import net.dv8tion.jda.api.EmbedBuilder;
+
 public interface Art {
 
 	public String getName();
@@ -15,4 +17,6 @@ public interface Art {
 	public LocalDate getDateCreation();
 	
 	public void setDateCreation(LocalDate date);
+	
+	public EmbedBuilder createEmbed();
 }
