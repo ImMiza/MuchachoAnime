@@ -7,7 +7,10 @@ import net.dv8tion.jda.api.EmbedBuilder;
 public class Anime implements Art{
 
 	private String name;
+	private String alternativeName;
+	private String description;
 	private String imageURL;
+	private String url;
 	
 	private int numberOfEpisode;
 	private int currentEpisode;
@@ -18,17 +21,21 @@ public class Anime implements Art{
 	private boolean finish;
 	private boolean start;
 	
-	public Anime(String name, String imageURL, int numberOfEpisode, int season, LocalDate creation) {
+	public Anime(String name, String alternativeName, String imageURL, String url, int numberOfEpisode, int season, LocalDate creation) {
 		this.name = name;
+		this.alternativeName = alternativeName;
 		this.imageURL = imageURL;
 		this.numberOfEpisode = numberOfEpisode;
 		this.currentEpisode = 1;
 		this.season = season;
 		this.creation = creation;
 		this.finish = false;
+		this.url = url;
 		
 		if(LocalDate.now().isAfter(creation) || LocalDate.now().isEqual(creation)) this.start = true;
 		else this.start = false;
+		
+		updateDescription();
 	}
 	
 	@Override
@@ -85,6 +92,12 @@ public class Anime implements Art{
 		creation = date;
 	}
 	
+	@Override
+	public String getSourceURL()
+	{
+		return url;
+	}
+	
 	public boolean isFinish()
 	{
 		return finish;
@@ -109,22 +122,25 @@ public class Anime implements Art{
 		return start == true && finish == false;
 	}
 	
+	public void updateDescription() {
+		this.description = "Titre Alternative : " + alternativeName + "\n\n";
+		this.description += "Etat de l'anime : ";
+		if(isFinish())
+			this.description += "Fini";
+		else if(isInProgress())
+			this.description += "En cours";
+		else
+			this.description += "Pas encore sorti";
+		
+		description += "\nSortie le :" + ((isStart()) ? creation.toString() : "Pas encore sortie");
+	}
+	
 	@Override
 	public EmbedBuilder createEmbed()
 	{
 		EmbedBuilder builder = new EmbedBuilder();
 		builder.setTitle(getName());
 		builder.setColor(0x33ccff);
-		
-		String description = "Etat de l'anime : ";
-		if(isFinish())
-			description += "Fini";
-		else if(isInProgress())
-			description += "En cours";
-		else
-			description += "Pas encore sorti";
-		
-		description += "\nSortie le :" + ((isStart()) ? creation.toString() : "Pas encore sortie");
 		builder.setDescription(description);
 		builder.addField("Episode en cours", ""+getCurrentEpisode(), true);
 		builder.addField("Nombre d'episode", ""+getNumberOfEpisode(), true);

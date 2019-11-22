@@ -10,6 +10,8 @@ public interface Art {
 	
 	public String getImageURL();
 	
+	public String getSourceURL();
+	
 	public void setImageURL(String url);
 	
 	public ArtType getType();
@@ -19,4 +21,6 @@ public interface Art {
 	public void setDateCreation(LocalDate date);
 	
 	public EmbedBuilder createEmbed();
+	
+	
 }

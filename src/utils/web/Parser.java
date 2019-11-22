@@ -15,17 +15,28 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import exceptions.ParserNotNautiljonException;
+
 public class Parser
 {
 
 	private BufferedReader	reader;
 	private URL				url;
 
-	public Parser(String url) throws IOException
+	private String originalTitle;
+	private String alternativeTitle;
+	private List<String> genres;
+	private String imageURL;
+	private String linkURL;
+	private int numberOfEpisode;
+	
+	public Parser(String url) throws IOException, ParserNotNautiljonException
 	{
+		if(!url.contains("www.nautiljon.com"))
+			throw new ParserNotNautiljonException();
+		
 		this.url = new URL(url);
 		this.reader = getBufferedReader(this.url);
-		
 		List<String> list = new ArrayList<String>();
 		String line = "";
 		boolean start = false;
@@ -38,12 +49,14 @@ public class Parser
 				list.addAll(Arrays.asList(line.replace("><", ">\n<").trim().split("\n")));
 		}
 		
-		for(String str : getGenres(list)) {
-			System.out.println(str);
-		}
+		this.originalTitle = getOriginalTitle(list);
+		this.alternativeTitle = getAlternativeTitle(list);
+		this.genres = getGenres(list);
+		this.imageURL = getUrlImage(list);
+		this.numberOfEpisode = getNumberOfEpisode(list);
+		this.linkURL = url;
 		
-		System.out.println(getUrlImage(list));
-		System.out.println("Nombre episode: " + getNumberOfEpisode(list));
+		this.reader.close();
 	}
 
 	private List<String> getGenres(List<String> list) {
@@ -71,17 +84,44 @@ public class Parser
 		return url;
 	}
 	
-	private String getNumberOfEpisode(List<String> list) {
+	private String getOriginalTitle(List<String> list) {
+		String title = "";
 		
 		for(String s : list) {
-			if(s.contains("<span itemprop=\"numberOfEpisodes\">")) {
-				System.out.println(s);
-				String n = s.substring(s.lastIndexOf("\">")+2, s.lastIndexOf("<")).trim();
-				return (!n.equals("?")) ? n : "-1";
+			if(s.contains("<span class=\"bold\">Titre original : </span>")) {
+				String str = s.replace("<span class=\"bold\">Titre original : </span>", "").replace("</li>", "").trim();
+				return (str.contains("/")) ? str.split("/")[0] : str;
 			}
 		}
 		
-		return "-2";
+		return title;
+	}
+	
+	private String getAlternativeTitle(List<String> list) {
+		String title = "";
+		
+		for(String s : list) {
+			if(s.contains("<span class=\"bold\">Titre alternatif : </span>")) {
+				String str = s.replace("<span class=\"bold\">Titre alternatif : </span>", "").replace("</li>", "");
+				str = str.replace("<span itemprop=\"alternateName\">", "").replace("</span>", "");
+				return (str.contains("/")) ? str.split("/")[0] : str;
+			}
+		}
+		
+		return title;
+	}
+	
+	private int getNumberOfEpisode(List<String> list) {
+		
+		for(String s : list) {
+			if(s.contains("<span itemprop=\"numberOfEpisodes\">")) {
+				String n = s.substring(s.lastIndexOf("\">")+2, s.lastIndexOf("<"));
+				n = n.replace("</span>", "").trim();
+				return (n.contains("x")) ? Integer.parseInt(n.split("x")[0].trim()) : -1;
+			}
+		}
+		
+		return -1;
 	}
 
 	private BufferedReader getBufferedReader(URL url) {
@@ -116,4 +156,33 @@ public class Parser
 		}
 	}
 
+	public String getOriginalTitle()
+	{
+		return originalTitle;
+	}
+
+	public String getAlternativeTitle()
+	{
+		return alternativeTitle;
+	}
+
+	public List<String> getGenres()
+	{
+		return genres;
+	}
+
+	public String getImageURL()
+	{
+		return imageURL;
+	}
+
+	public int getNumberOfEpisode()
+	{
+		return numberOfEpisode;
+	}
+
+	public String getLinkURL()
+	{
+		return linkURL;
+	}
 }
